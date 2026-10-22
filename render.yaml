@@ -1,0 +1,18 @@
+# Render Blueprint: one-click backend + PostgreSQL
+databases:
+  - name: carewatch-db
+    plan: free
+    databaseName: carewatch
+services:
+  - type: web
+    name: carewatch-api
+    runtime: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - {key: DATABASE_URL, fromDatabase: {name: carewatch-db, property: connectionString}}
+      - {key: JWT_SECRET, generateValue: true}
+      - {key: SIMULATOR_KEY, generateValue: true}
+      - {key: SIMULATE, value: "true"}
+      - {key: FRONTEND_URL, sync: false}   # paste your Netlify URL here
