@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CareWatch – Remote Patient Monitoring</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+<script>
+window.echarts||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js"><\/script>');
+window.lucide||document.write('<script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"><\/script>');
+</script>
+<script>window.lucide=window.lucide||{createIcons:function(){}};</script>
+<script src="config.js"></script>
+<style>
+:root{--bg:#fbf6e9;--ink:#241c0f;--mu:#7a6c52;--ln:#e0cf9f;--gold:#b8860b;--card:rgba(255,252,243,.82);--hi:#b3261e;--wa:#a86a00;--ok:#1d7a4d;box-sizing:border-box;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:14px/1.5 'IBM Plex Sans',system-ui,sans-serif;background:radial-gradient(circle at 0% 100%,rgba(230,190,80,.38),transparent 45%),radial-gradient(circle at 100% 0%,rgba(230,190,80,.2),transparent 40%),var(--bg);background-attachment:fixed}
+.deco{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+.mono,.eb{font-family:'IBM Plex Mono',monospace}.eb{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--mu)}.mu{color:var(--mu);font-size:13px}
+.shell{position:relative;z-index:1;display:grid;grid-template-columns:260px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;padding:26px 20px;border-right:1px solid var(--ln);background:rgba(255,250,238,.72);backdrop-filter:blur(6px);display:flex;flex-direction:column;gap:18px}
+.logo{font:600 21px 'IBM Plex Sans';letter-spacing:.02em;display:flex;align-items:center;gap:8px}.logo b{background:linear-gradient(100deg,#d6a526,#8a5a00);-webkit-background-clip:text;background-clip:text;color:transparent}
+.usr{border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);padding:16px 0}.usr .n{font-weight:600;display:flex;align-items:center;gap:8px}.usr i{width:8px;height:8px;border-radius:50%;background:var(--ok)}
+.nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;color:var(--mu);cursor:pointer;border-left:3px solid transparent;font-size:15px}.nav a:hover{background:rgba(184,134,11,.08)}
+.nav a.on{color:var(--ink);font-weight:600;border-color:var(--gold);background:rgba(184,134,11,.12)}.nav .cnt{margin-left:auto;font:600 11px 'IBM Plex Mono';background:var(--hi);color:#fff;padding:1px 7px;border-radius:9px}
+.sf{margin-top:auto;display:grid;gap:8px}.btn{border:1px solid #c9b075;background:#fffaf0;padding:9px 12px;font:500 13px 'IBM Plex Sans';cursor:pointer;color:var(--ink);text-align:left;display:flex;gap:8px;align-items:center}.btn:hover{border-color:var(--gold);background:#fff4d6}
+.gb{background:linear-gradient(135deg,#d6a526,#a97a0c);color:#fff;border:0;justify-content:center;font-weight:600}
+.banner{display:flex;gap:10px;align-items:center;padding:12px 40px;background:rgba(222,240,222,.85);color:#1d5c3a;font-size:13px;border-bottom:1px solid #c7e0c9}
+.top{display:flex;justify-content:space-between;align-items:center;padding:28px 40px;border-bottom:1px solid var(--ln)}.t2{font:500 24px 'IBM Plex Sans';margin-top:4px}
+.live{font:13px 'IBM Plex Mono';color:var(--ok);display:flex;gap:8px;align-items:center}.live i{width:9px;height:9px;border-radius:50%;background:var(--ok);animation:pu 1.4s infinite}@keyframes pu{50%{opacity:.3}}
+#view{padding:34px 40px 60px}
+.row{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+h1{font:700 52px/1.05 'Cormorant Garamond',Georgia,serif;margin:6px 0 0;background:linear-gradient(100deg,#c9951c,#1b1206 50%,#b8860b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.search{display:flex;align-items:center;gap:10px;border:1px solid #c9b075;background:#fffaf0;padding:0 14px;height:48px;min-width:260px}.search input{border:0;outline:0;background:transparent;font:15px 'IBM Plex Sans';color:var(--ink);width:100%}
+.kpi{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--ln);background:var(--card);margin-bottom:26px}
+.kpi>div{padding:20px 22px;border-right:1px solid var(--ln)}.kpi>div:last-child{border:0}.kpi b{display:block;font:600 36px/1.2 'IBM Plex Mono';margin:8px 0 2px}.kpi .l{font-size:13px;color:var(--mu)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:18px}
+.pc{background:var(--card);border:1px solid var(--ln);padding:20px;cursor:pointer;transition:.15s}.pc:hover{border-color:var(--gold);box-shadow:0 6px 22px rgba(160,120,20,.16)}
+.pc .r1{display:flex;justify-content:space-between;gap:10px}.nm{font:600 20px 'IBM Plex Sans';margin:6px 0 2px}
+.bd{height:30px;padding:0 10px;border:1px solid;display:inline-flex;align-items:center;gap:6px;font-size:13px;background:#fff}.bd b{font-family:'IBM Plex Mono'}
+.Stable{color:var(--ok);border-color:#a9d5bd}.Watch{color:var(--wa);border-color:#e3c27a}.High{color:var(--hi);border-color:#e6a6a1;background:#fff1ef}
+.vg{display:grid;grid-template-columns:repeat(4,auto);gap:10px;margin:22px 0 18px}.vg>div{border-top:1px solid var(--ln);padding-top:10px}.vg .k{font-size:11px;color:var(--mu);letter-spacing:.06em;text-transform:uppercase}
+.vg b{display:block;font:600 19px 'IBM Plex Mono';margin-top:8px}.vg small{color:var(--mu);font-size:11px}.bad{color:var(--hi)}
+.r3{display:flex;justify-content:space-between;border-top:1px solid var(--ln);padding-top:12px;font-size:13px}.al{color:var(--hi)}
+.card{background:var(--card);border:1px solid var(--ln);padding:20px;margin-bottom:18px}.card h2{font:600 11px 'IBM Plex Mono';letter-spacing:.18em;text-transform:uppercase;color:var(--mu);margin:0 0 12px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}.tbl th{font:500 11px 'IBM Plex Mono';letter-spacing:.14em;text-transform:uppercase;color:var(--mu);text-align:left;padding:8px 10px;border-bottom:1px solid var(--ln)}.tbl td{padding:10px;border-bottom:1px solid #efe4c4;vertical-align:top}.tbl tr.c{cursor:pointer}.tbl tr.c:hover{background:#fff4d6}
+.chips{display:flex;gap:8px;flex-wrap:wrap}.chips .btn.on{background:#f3dfa0;border-color:var(--gold);font-weight:600}
+.back{cursor:pointer;color:var(--mu);font-size:13px;margin-bottom:10px;display:inline-flex;gap:6px;align-items:center}.back:hover{color:var(--ink)}
+.wr{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid #efe4c4}.wr:last-child{border:0}
+#login{max-width:380px;margin:12vh auto 0;padding:32px;background:var(--card);border:1px solid var(--ln);position:relative;z-index:2}
+#login input{width:100%;height:48px;margin:6px 0;padding:0 14px;border:1px solid #c9b075;background:#fffaf0;font:15px 'IBM Plex Sans';color:var(--ink)}#login input:focus{outline:0;border-color:var(--gold)}
+@media(max-width:900px){.shell{grid-template-columns:1fr}.side{position:static;height:auto;border-right:0;border-bottom:1px solid var(--ln)}.nav{display:flex;overflow:auto}.sf{grid-template-columns:1fr 1fr;margin:0}.top,#view,.banner{padding-left:18px;padding-right:18px}.kpi{grid-template-columns:1fr 1fr}.g2{grid-template-columns:1fr}h1{font-size:40px}}
+</style></head><body>
+<svg class="deco" viewBox="0 0 400 800" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#c9a24a" stroke-width="1.2" opacity=".5"><path d="M0 60H40L90 10H140M0 100H60L110 50M20 0V40"/><circle cx="20" cy="44" r="3"/><circle cx="142" cy="10" r="3"/><circle cx="112" cy="50" r="3"/><path d="M400 740H350L310 780H260M400 700H340L300 740M380 800V760"/><circle cx="380" cy="756" r="3"/><circle cx="258" cy="780" r="3"/><circle cx="298" cy="740" r="3"/></svg>
+<div id="app"></div>
+<script>
+const $=s=>document.querySelector(s);
+const T={hr:[50,110,'Heart rate','bpm',0],sys:[90,160,'Systolic BP','mmHg',0],dia:[55,100,'Diastolic BP','mmHg',0],spo2:[93,101,'SpO₂','%',1],temp:[35.8,38,'Temperature','°C',1]};
+const AMP={hr:4,sys:5,dia:3,spo2:.7,temp:.15},LIM={hr:.6,sys:.9,dia:.5,spo2:.08,temp:.03};
+const P=[['Noah Bennett',63,'M','hypertension',[77,150,92,95,36.8],{sys:.9,dia:.4}],['Eleanor Brooks',48,'F','hypertension',[72,137,86,96,37],0],['Marcus Chen',51,'M','type 2 diabetes',[75,128,80,96,37.1],0],['Priya Nair',67,'F','COPD',[78,126,80,95,36.9],{spo2:-.1,hr:.45}],['Samuel Okafor',74,'M','atrial fibrillation',[88,122,74,96,36.7],{hr:.7}],['Hana Kobayashi',58,'F','heart failure',[84,118,76,96,36.8],0],['Lucas Ferreira',45,'M','asthma',[70,114,72,98,36.8],0],['Ayesha Rahman',69,'F','CKD',[80,138,86,96,37],0]]
+.map((r,i)=>({id:i,name:r[0],age:r[1],sex:r[2],cond:r[3],base:{hr:r[4][0],sys:r[4][1],dia:r[4][2],spo2:r[4][3],temp:r[4][4]},off:{hr:0,sys:0,dia:0,spo2:0,temp:0},dr:null,pend:r[5],h:{hr:[],sys:[],dia:[],spo2:[],temp:[]},risk:0,lvl:'Stable',why:[]}));
+let tick=0,paused=false,sel=0,user=null,alerts=[],cool={},ec={},view='overview',q='',af='All',reads=0,TOKEN=null,ROLE='',STATS=null,WSK=null,pend=false;
+const API=(window.CAREWATCH_API||'').replace(/\/$/,'');
+const USERS={'dr.rao':{pw:'demo123',name:'Dr. Rao',role:'Physician access'},'nurse.sen':{pw:'demo123',name:'Nurse Sen',role:'Nurse access'}};
+const N=a=>(Math.random()+Math.random()-1)*a,mean=a=>a.reduce((x,y)=>x+y,0)/a.length,sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))||1};
+const slope=a=>{const n=a.length,m=mean(a);let u=0,d=0;a.forEach((y,i)=>{u+=(i-(n-1)/2)*(y-m);d+=(i-(n-1)/2)**2});return u/d};
+const lv=(p,k)=>p.h[k][p.h[k].length-1],oor=(p,k)=>lv(p,k)<T[k][0]||lv(p,k)>T[k][1],f=(k,v)=>v==null||isNaN(v)?'–':T[k][4]?(+v).toFixed(1):v;
+const act=a=>a.status?a.status=='active':tick-a.tick<40,nAct=p=>alerts.filter(a=>a.p==p.name&&act(a)).length;
+function step(p){for(const k in T){if(p.dr&&p.dr[k])p.off[k]+=p.dr[k];let v=p.base[k]+p.off[k]+N(AMP[k]);if(k=='spo2')v=Math.min(100,v);p.h[k].push(+v.toFixed(T[k][4]));if(p.h[k].length>120)p.h[k].shift();}reads+=5;}
+function addAlert(p,type,msg,sev){const key=p.id+type+msg.split(' ')[0];if(cool[key]&&tick-cool[key]<25)return;cool[key]=tick;alerts.unshift({tick,t:new Date().toLocaleTimeString(),p:p.name,id:p.id,type,msg,sev});if(alerts.length>80)alerts.pop();}
+function assess(p){let r=0,why=[];
+ for(const k in T){const v=lv(p,k),[lo,hi,nm,u]=T[k];
+  if(v<lo||v>hi){const s=(k=='spo2'&&v<90)||v>hi*1.15?30:k=='spo2'?25:18;r+=s;const m=`${nm} ${f(k,v)} ${u} outside ${lo}–${hi}`;why.push(m);addAlert(p,'Threshold',m,s>=25?'High':'Watch');}
+  const h=p.h[k];if(h.length>40){const b=h.slice(-40,-5),z=(mean(h.slice(-3))-mean(b))/sd(b);
+   if(Math.abs(z)>3){r+=12;const m=`${nm} deviates ${z.toFixed(1)}σ from personal baseline`;why.push(m);addAlert(p,'Anomaly',m,'Watch');}
+   const s=slope(h.slice(-12));
+   if(Math.abs(s)>LIM[k]&&(k!='spo2'||s<0)){r+=10;why.push(`${nm} trending ${s>0?'up':'down'} (${s.toFixed(2)}/reading)`);addAlert(p,'Trend',`${nm} trending ${s>0?'up':'down'} steadily`,'Watch');}}}
+ p.risk=Math.min(100,r);p.lvl=r>=40?'High':r>=15?'Watch':'Stable';p.why=why;}
+const vit=p=>[['HR','hr',lv(p,'hr'),'bpm'],['BP','sys',lv(p,'sys')+'/'+lv(p,'dia'),'mmHg'],['SpO₂','spo2',f('spo2',lv(p,'spo2')),'%'],['Temp','temp',f('temp',lv(p,'temp')),'°C']].map(v=>`<div><span class="k">${v[0]}</span><b class="${(v[1]=='sys'?oor(p,'sys')||oor(p,'dia'):oor(p,v[1]))?'bad':''}">${v[2]}</b><small>${v[3]}</small></div>`).join('');
+const lc=(l,c)=>({Stable:'#1d7a4d',Watch:'#a86a00',High:'#b3261e'}[l]);
+const COLS={hr:'#b3261e',sys:'#8a5a00',spo2:'#1d7a4d',temp:'#2f6f8f'};
+function lineOpt(k){const col=COLS[k],[lo,hi]=T[k];const s=[{type:'line',smooth:.3,showSymbol:false,data:[],lineStyle:{width:2,color:col},areaStyle:{color:col,opacity:.08},markArea:{silent:true,itemStyle:{color:'rgba(29,122,77,.09)'},data:[[{yAxis:lo},{yAxis:hi}]]}},{type:'effectScatter',data:[],symbolSize:7,itemStyle:{color:col},rippleEffect:{scale:3},silent:true,z:5}];
+ if(k=='sys')s.push({type:'line',smooth:.3,showSymbol:false,data:[],lineStyle:{width:1.5,color:'#a98467',type:'dashed'}});
+ return{animation:false,grid:{left:40,right:12,top:10,bottom:6},tooltip:{trigger:'axis',backgroundColor:'#fffaf0',borderColor:'#e0cf9f',textStyle:{color:'#241c0f',fontSize:12}},xAxis:{type:'category',show:false,data:[]},yAxis:{type:'value',scale:true,splitNumber:3,splitLine:{lineStyle:{color:'rgba(150,120,50,.16)'}},axisLabel:{color:'#7a6c52',fontSize:10}},series:s};}
+function shell(){const u=USERS[user];
+ $('#app').innerHTML=`<div class="shell"><aside class="side"><div class="logo"><i data-lucide="activity" style="color:#b8860b"></i>CARE<b>WATCH</b></div>
+ <div class="usr"><div class="n"><i></i>${u.name}</div><div class="eb" style="margin:6px 0 0 16px">${u.role}</div></div>
+ <nav class="nav"><a id="n_overview" onclick="go('overview')"><i data-lucide="users"></i>Overview</a><a id="n_alerts" onclick="go('alerts')"><i data-lucide="alert-triangle"></i>Alerts center<span class="cnt" id="ac"></span></a><a id="n_model" onclick="go('model')"><i data-lucide="bar-chart-3"></i>Model performance</a></nav>
+ <div class="sf"><button class="btn gb" onclick="crisis()">⚠ Simulate deterioration</button><button class="btn" id="pz" onclick="paused=!paused;this.textContent=paused?'▶ Resume simulator':'⏸ Pause simulator'">⏸ Pause simulator</button></div></aside>
+ <div><div class="banner"><i data-lucide="shield-check" style="width:18px"></i><span><b>SIMULATED DATA</b> — for demonstration only. Alerts support clinical review and do not replace medical judgment.</span></div>
+ <div class="top"><div><div class="eb">Remote patient monitoring / ${new Date().toLocaleDateString('en-GB')}</div><div class="t2">Clinical command center</div></div><div class="live"><i></i><span id="lv">Live simulator 1.5s</span></div></div><div id="view"></div></div></div>`;go('overview');}
+function go(v,id){view=v;if(id!==undefined)sel=id;Object.values(ec).forEach(c=>c.dispose());ec={};
+ ['overview','alerts','model'].forEach(x=>$('#n_'+x).classList.toggle('on',x==v||(v=='patient'&&x=='overview')));
+ const V=$('#view');
+ if(v=='overview')V.innerHTML=`<div class="row"><div><div class="eb">Census / Prioritized by live risk</div><h1>Patient overview</h1></div><div class="search"><i data-lucide="search" style="width:18px;color:#7a6c52"></i><input placeholder="Search patients" value="${q}" oninput="q=this.value;upd()"></div></div><div class="kpi" id="kpi"></div><div class="cards" id="cards"></div>`;
+ if(v=='alerts')V.innerHTML=`<div class="row"><div><div class="eb">Signals / Newest first</div><h1>Alerts center</h1></div><div class="chips" id="fl">${['All','High','Watch','Active'].map(x=>`<button class="btn ${x==af?'on':''}" onclick="af='${x}';go('alerts')">${x}</button>`).join('')}</div></div><div class="card" style="padding:8px 12px"><table class="tbl" id="at"></table></div>`;
+ if(v=='model')V.innerHTML=`<div class="row"><div><div class="eb">Detection / Live statistics from this session</div><h1>Model performance</h1></div></div><div class="kpi" id="kpi"></div><div class="g2"><div class="card"><h2>Alerts raised by detection layer</h2><div id="mc" style="height:230px"></div></div><div class="card"><h2>Detection layers</h2><div id="ml"></div></div></div><div class="card"><h2>Threshold rules (clinician-configurable in production)</h2><table class="tbl">${Object.keys(T).map(k=>`<tr><td>${T[k][2]}</td><td class="mono">${T[k][0]} – ${T[k][1]} ${T[k][3]}</td></tr>`).join('')}</table></div>`;
+ if(v=='patient'){const p=P[sel];V.innerHTML=`<a class="back" onclick="go('overview')">← Back to overview</a><div class="row"><div><div class="eb">${p.code||'PT-0'+(p.id+1)} / ${p.age} · ${p.sex} · ${p.cond}</div><h1>${p.name}</h1></div><span class="bd" id="pb"></span></div><div class="card"><div class="vg" id="pv" style="margin:0"></div></div>
+ <div class="g2">${['hr','sys','spo2','temp'].map(k=>`<div class="card"><h2>${T[k][2]} (${T[k][3]})${k=='sys'?' · dashed = diastolic':''}</h2><div id="c_${k}" style="height:160px"></div></div>`).join('')}</div>
+ <div class="g2"><div class="card"><h2>Risk factors</h2><div id="why"></div><div class="mu" id="sm" style="margin-top:10px"></div></div><div class="card"><h2>Recent alerts</h2><div id="pal"></div></div></div>`;
+  ['hr','sys','spo2','temp'].forEach(k=>{ec[k]=echarts.init($('#c_'+k));ec[k].setOption(lineOpt(k))});}
+ lucide.createIcons();upd();}
+function upd(){if(!user)return;const act2=alerts.filter(act).length;$('#ac').textContent=act2||'';$('#ac').style.display=act2?'':'none';$('#lv').textContent=paused?'Simulator paused':'Live simulator 1.5s';
+ if(view=='overview'){const hi=P.filter(x=>x.lvl!='Stable').length;
+  $('#kpi').innerHTML=[['Patients monitored',P.length,'live census'],['Needs review',hi,'watch, high or critical'],['Open alerts',act2,'clinical signals'],['Data cadence','1.5s','simulator interval']].map(k=>`<div><span class="l">${k[0]}</span><b>${k[1]}</b><span class="l">${k[2]}</span></div>`).join('');
+  const s=q.toLowerCase();$('#cards').innerHTML=[...P].sort((a,b)=>b.risk-a.risk).filter(p=>(p.name+p.cond+'pt-0'+(p.id+1)).toLowerCase().includes(s)).map(p=>{const n=nAct(p);return `<div class="pc" onclick="go('patient',${p.id})"><div class="r1"><div><div class="eb">PT-0${p.id+1}</div><div class="nm">${p.name}</div><div class="mu">${p.age} · ${p.sex} · ${p.cond}</div></div><span class="bd ${p.lvl}"><b>${p.risk}</b>${p.lvl}</span></div><div class="vg">${vit(p)}</div><div class="r3"><span class="${n?'al':'mu'}">⚠ ${n} active alert${n==1?'':'s'}</span><span>View patient →</span></div></div>`}).join('')||'<div class="mu">No patients match.</div>';}
+ if(view=='alerts'){const L=alerts.filter(a=>af=='All'||(af=='Active'?act(a):a.sev==af));$('#at').innerHTML=`<tr><th>Time</th><th>Patient</th><th>Layer</th><th>Severity</th><th>Signal</th><th>Status</th></tr>`+(L.length?L.map(a=>`<tr class="c" onclick="go('patient',${a.id})"><td class="mono">${a.t}</td><td><b>${a.p}</b></td><td>${a.type}</td><td><span class="bd ${a.sev}" style="height:24px">${a.sev}</span></td><td>${a.msg}</td><td class="${act(a)?'al':'mu'}">${a.status=='acknowledged'?'Acknowledged':act(a)?'Active':'Resolved'}${API&&a.aid&&act(a)&&ROLE!='nurse'?` <button class="btn" style="height:24px;padding:0 8px;margin-left:6px" onclick="event.stopPropagation();ack(${a.aid})">Acknowledge</button>`:''}</td></tr>`).join(''):'<tr><td colspan="6" class="mu">No alerts for this filter yet.</td></tr>');}
+ if(view=='model'){const c={Threshold:0,Anomaly:0,Trend:0,ML:0};if(STATS&&STATS.alerts_by_layer){const m={threshold:'Threshold',anomaly:'Anomaly',trend:'Trend',ml:'ML'};for(const k in STATS.alerts_by_layer)c[m[k]]=STATS.alerts_by_layer[k]}else alerts.forEach(a=>{c[a.type]=(c[a.type]||0)+1});
+  $('#kpi').innerHTML=[['Readings processed',reads.toLocaleString(),'simulated vitals'],['Alerts raised',STATS?STATS.alerts_total:alerts.length,'this session'],['Active now',act2,'last 60 seconds'],['Detection layers',API?4:3,API?'rules · baseline · trend · ML':'rules · baseline · trend']].map(k=>`<div><span class="l">${k[0]}</span><b>${k[1]}</b><span class="l">${k[2]}</span></div>`).join('');
+  $('#ml').innerHTML=[['Threshold rules','Flags any vital outside its target range; severity rises with distance from range.'],['Baseline anomaly','Compares the last 3 readings with the patient’s own previous 35 (z-score above 3σ).'],['Trend slope','Fits a line over the last 12 readings to catch steady drifts before a threshold is crossed.'],...(API?[['ML (Isolation Forest)','Per-patient model trained on a rolling window flags combinations of readings that look unusual.']]:[])].map(x=>`<div class="wr"><b style="min-width:130px">${x[0]}</b><span class="mu">${x[1]}</span></div>`).join('')+`<p class="mu">${API?'Live mode: detection runs on the FastAPI backend (threshold, baseline, trend and Isolation Forest).':'Demo mode: statistical detectors run in the browser. The FastAPI backend adds a Scikit-learn Isolation Forest layer.'} Validate against clinician-labelled events before any clinical use.</p>`;
+  if(!ec.m){ec.m=echarts.init($('#mc'));ec.m.setOption({animation:false,grid:{left:90,right:30,top:10,bottom:10},xAxis:{type:'value',show:false},yAxis:{type:'category',data:['Threshold','Anomaly','Trend','ML'],axisLine:{show:false},axisTick:{show:false},axisLabel:{color:'#241c0f'}},series:[{type:'bar',barWidth:18,data:[],label:{show:true,position:'right',fontFamily:'IBM Plex Mono'},itemStyle:{color:'#b8860b'}}]})}
+  ec.m.setOption({series:[{data:[c.Threshold,c.Anomaly,c.Trend,c.ML]}]});}
+ if(view=='patient'){const p=P[sel];$('#pb').className='bd '+p.lvl;$('#pb').innerHTML=`<b>${p.risk}</b>${p.lvl} risk`;$('#pv').innerHTML=vit(p);
+  ['hr','sys','spo2','temp'].forEach(k=>{const h=p.h[k],n=h.length,s=[{data:h},{data:[[n-1,h[n-1]]]}];if(k=='sys')s.push({data:p.h.dia});ec[k].setOption({xAxis:{data:h.map((_,i)=>i)},series:s})});
+  $('#why').innerHTML=p.why.length?p.why.map(w=>`<div class="wr"><span class="al">⚑</span><span>${w}</span></div>`).join(''):'<div class="wr"><span style="color:var(--ok)">✓</span><span>No concerning findings in the latest readings.</span></div>';
+  $('#sm').textContent=Object.keys(T).map(k=>`${T[k][2]}: avg ${mean(p.h[k]).toFixed(T[k][4])}, range ${Math.min(...p.h[k])}–${Math.max(...p.h[k])}`).join(' · ');
+  const L=alerts.filter(a=>a.id==p.id).slice(0,8);$('#pal').innerHTML=L.length?L.map(a=>`<div class="wr"><span class="bd ${a.sev}" style="height:22px;font-size:11px">${a.type}</span><span>${a.msg}<br><span class="mu mono">${a.t}</span></span></div>`).join(''):'<div class="mu">No alerts for this patient yet.</div>';}}
+async function crisis(){const p=P[Math.floor(Math.random()*P.length)];
+ if(API){const r=await fetch(API+'/simulate/deteriorate/'+p.pid,{method:'POST',headers:{Authorization:'Bearer '+TOKEN}});if(!r.ok){alert(r.status==403?'Only physicians can trigger this.':'Simulator unavailable.');return}}
+ else p.dr={spo2:-.2,hr:.8,sys:.5,temp:.04};go('patient',p.id);}
+function out(){user=null;TOKEN=null;WSK&&WSK.close();Object.values(ec).forEach(c=>c.dispose());ec={};draw();}
+window.addEventListener('resize',()=>Object.values(ec).forEach(c=>c.resize()));
+function draw(){if(user){shell();return}
+ $('#app').innerHTML=`<div id="login"><div class="logo" style="justify-content:center;font-size:26px"><i data-lucide="activity" style="color:#b8860b"></i>CARE<b>WATCH</b></div><div class="eb" style="text-align:center;margin:6px 0 22px">Remote patient monitoring</div>
+ <input id="u" placeholder="Username" autocomplete="off"><input id="pw" type="password" placeholder="Password"><p id="err" class="mu" style="color:var(--hi);min-height:20px;margin:4px 0"></p><button class="btn gb" style="width:100%;height:46px" onclick="login()">Sign in</button>
+ <p class="mu" style="margin-top:16px">Demo: <b>dr.rao</b> / <b>demo123</b> (or <b>nurse.sen</b>)<br>${API?'Secured with JWT and role-based access; views are audit-logged.':'Demo auth, in-memory only. Live mode uses FastAPI + JWT, role-based access, PostgreSQL and audit logs.'}</p></div>`;lucide.createIcons();}
+const cap=x=>x.charAt(0).toUpperCase()+x.slice(1),ML_=x=>x=='ml'?'ML':cap(x);
+const g=path=>fetch(API+path,{headers:{Authorization:'Bearer '+TOKEN}}).then(r=>{if(!r.ok)throw new Error(r.status);return r.json()});
+const mapA=a=>({aid:a.id,id:P.findIndex(p=>p.pid==a.patient_id),t:new Date(a.ts).toLocaleTimeString(),p:a.patient_name,type:ML_(a.layer),msg:a.message,sev:cap(a.severity),status:a.status});
+async function loadLive(){const ps=await g('/patients');P.length=0;
+ for(const [i,x] of ps.entries()){const h=await g(`/patients/${x.id}/vitals?hours=2&limit=120`);const hh={hr:[],sys:[],dia:[],spo2:[],temp:[]};
+  const AL={hr:['hr','heart_rate'],sys:['sys','systolic','bp_sys'],dia:['dia','diastolic','bp_dia'],spo2:['spo2','SpO2'],temp:['temp','temperature']},gv=(r,k)=>{for(const a of AL[k]){if(r&&r[a]!=null)return r[a]}return null};
+  h.forEach(r=>{for(const k in hh)hh[k].push(gv(r,k))});if(!h.length&&x.latest)for(const k in hh)hh[k].push(gv(x.latest,k));for(const k in hh)if(!hh[k].length)hh[k].push(null);const rk=x.risk||{score:0,level:'stable',factors:[]};
+  P.push({id:i,pid:x.id,code:x.code,name:x.name,age:x.age,sex:x.sex,cond:x.condition,h:hh,risk:rk.score,lvl:cap(rk.level),why:rk.factors||[]})}
+ alerts=(await g('/alerts?limit=80')).map(mapA);STATS=await g('/model/stats');reads=STATS.readings_processed;}
+function startWS(){if(!API||!user)return;const ws=WSK=new WebSocket(API.replace(/^http/,'ws')+'/ws/live?token='+TOKEN);
+ ws.onmessage=e=>{if(paused)return;const m=JSON.parse(e.data);if(m.type!='reading')return;const p=P.find(x=>x.pid==m.patient_id);if(!p)return;
+  for(const k in T){p.h[k].push(m.vital[k]);if(p.h[k].length>120)p.h[k].shift()}
+  p.risk=m.risk.score;p.lvl=cap(m.risk.level);p.why=m.risk.factors;reads+=5;
+  if(m.alerts&&m.alerts.length){m.alerts.forEach(a=>alerts.unshift(mapA(a)));alerts=alerts.slice(0,80)}
+  if(!pend){pend=true;setTimeout(()=>{pend=false;upd()},400)}};
+ ws.onclose=()=>{if(user)setTimeout(startWS,3000)}}
+async function ack(id){try{const r=await fetch(API+'/alerts/'+id+'/acknowledge',{method:'POST',headers:{Authorization:'Bearer '+TOKEN}});if(r.ok){const a=alerts.find(x=>x.aid==id);if(a)a.status='acknowledged';upd()}else alert('Not allowed for your role.')}catch(e){}}
+if(API)setInterval(async()=>{if(user&&TOKEN){try{STATS=await g('/model/stats')}catch(e){}}},10000);
+async function login(au,aw){const u=au||$('#u').value.trim(),w=aw||$('#pw').value;
+ if(!API){if(USERS[u]&&USERS[u].pw===w){user=u;shell()}else $('#err').textContent='Invalid credentials.';return}
+ $('#err').textContent='Signing in…';
+ try{const r=await fetch(API+'/auth/login',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({username:u,password:w})});
+  if(r.status==429){$('#err').textContent='Too many attempts. Wait a minute.';return}
+  if(!r.ok){$('#err').textContent='Invalid credentials.';return}
+  const d=await r.json();TOKEN=d.access_token;ROLE=d.user.role;USERS[u]={name:d.user.full_name,role:cap(d.user.role)+' access'};user=u;
+  await loadLive();shell();startWS()}
+ catch(e){console.error('LOGIN/RENDER ERROR:',e);const el=$('#err');if(el)el.textContent='Error: '+e.message}}
+for(let i=0;i<60;i++){tick++;P.forEach(step)}tick=0;P.forEach(assess);alerts=[];
+setInterval(()=>{if(paused||API)return;tick++;if(tick==25)P.forEach(p=>{if(p.pend)p.dr=p.pend});P.forEach(p=>{step(p);assess(p)});upd();},1500);
+async function autoLogin(){$('#app').innerHTML='<p id="err" class="mu" style="padding:60px 20px;text-align:center">Loading dashboard…</p>';
+ await login(window.CAREWATCH_USER||'dr.rao',window.CAREWATCH_PASS||'demo123');
+ if(!user)setTimeout(draw,2500)}  // login page only appears if automatic sign-in fails
+autoLogin();
+</script></body></html>
