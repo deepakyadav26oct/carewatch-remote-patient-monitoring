@@ -5,6 +5,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.1/dist/umd/lucide.min.js"></script>
+<script>
+window.echarts||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.5.1/echarts.min.js"><\/script>');
+window.lucide||document.write('<script src="https://unpkg.com/lucide@0.263.1/dist/umd/lucide.min.js"><\/script>');
+</script>
+<script>window.lucide=window.lucide||{createIcons:function(){}};</script>
 <script src="config.js"></script>
 <style>
 :root{--bg:#fbf6e9;--ink:#241c0f;--mu:#7a6c52;--ln:#e0cf9f;--gold:#b8860b;--card:rgba(255,252,243,.82);--hi:#b3261e;--wa:#a86a00;--ok:#1d7a4d;box-sizing:border-box;color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -60,7 +65,7 @@ const API=(window.CAREWATCH_API||'').replace(/\/$/,'');
 const USERS={'dr.rao':{pw:'demo123',name:'Dr. Rao',role:'Physician access'},'nurse.sen':{pw:'demo123',name:'Nurse Sen',role:'Nurse access'}};
 const N=a=>(Math.random()+Math.random()-1)*a,mean=a=>a.reduce((x,y)=>x+y,0)/a.length,sd=a=>{const m=mean(a);return Math.sqrt(mean(a.map(x=>(x-m)**2)))||1};
 const slope=a=>{const n=a.length,m=mean(a);let u=0,d=0;a.forEach((y,i)=>{u+=(i-(n-1)/2)*(y-m);d+=(i-(n-1)/2)**2});return u/d};
-const lv=(p,k)=>p.h[k][p.h[k].length-1],oor=(p,k)=>lv(p,k)<T[k][0]||lv(p,k)>T[k][1],f=(k,v)=>T[k][4]?v.toFixed(1):v;
+const lv=(p,k)=>p.h[k][p.h[k].length-1],oor=(p,k)=>lv(p,k)<T[k][0]||lv(p,k)>T[k][1],f=(k,v)=>v==null||isNaN(v)?'–':T[k][4]?(+v).toFixed(1):v;
 const act=a=>a.status?a.status=='active':tick-a.tick<40,nAct=p=>alerts.filter(a=>a.p==p.name&&act(a)).length;
 function step(p){for(const k in T){if(p.dr&&p.dr[k])p.off[k]+=p.dr[k];let v=p.base[k]+p.off[k]+N(AMP[k]);if(k=='spo2')v=Math.min(100,v);p.h[k].push(+v.toFixed(T[k][4]));if(p.h[k].length>120)p.h[k].shift();}reads+=5;}
 function addAlert(p,type,msg,sev){const key=p.id+type+msg.split(' ')[0];if(cool[key]&&tick-cool[key]<25)return;cool[key]=tick;alerts.unshift({tick,t:new Date().toLocaleTimeString(),p:p.name,id:p.id,type,msg,sev});if(alerts.length>80)alerts.pop();}
@@ -125,8 +130,9 @@ const g=path=>fetch(API+path,{headers:{Authorization:'Bearer '+TOKEN}}).then(r=>
 const mapA=a=>({aid:a.id,id:P.findIndex(p=>p.pid==a.patient_id),t:new Date(a.ts).toLocaleTimeString(),p:a.patient_name,type:ML_(a.layer),msg:a.message,sev:cap(a.severity),status:a.status});
 async function loadLive(){const ps=await g('/patients');P.length=0;
  for(const [i,x] of ps.entries()){const h=await g(`/patients/${x.id}/vitals?hours=2&limit=120`);const hh={hr:[],sys:[],dia:[],spo2:[],temp:[]};
-  h.forEach(r=>{for(const k in hh)hh[k].push(r[k])});if(!h.length&&x.latest)for(const k in hh)hh[k].push(x.latest[k]);
-  P.push({id:i,pid:x.id,code:x.code,name:x.name,age:x.age,sex:x.sex,cond:x.condition,h:hh,risk:x.risk.score,lvl:cap(x.risk.level),why:x.risk.factors})}
+  const AL={hr:['hr','heart_rate'],sys:['sys','systolic','bp_sys'],dia:['dia','diastolic','bp_dia'],spo2:['spo2','SpO2'],temp:['temp','temperature']},gv=(r,k)=>{for(const a of AL[k]){if(r&&r[a]!=null)return r[a]}return null};
+  h.forEach(r=>{for(const k in hh)hh[k].push(gv(r,k))});if(!h.length&&x.latest)for(const k in hh)hh[k].push(gv(x.latest,k));for(const k in hh)if(!hh[k].length)hh[k].push(null);const rk=x.risk||{score:0,level:'stable',factors:[]};
+  P.push({id:i,pid:x.id,code:x.code,name:x.name,age:x.age,sex:x.sex,cond:x.condition,h:hh,risk:rk.score,lvl:cap(rk.level),why:rk.factors||[]})}
  alerts=(await g('/alerts?limit=80')).map(mapA);STATS=await g('/model/stats');reads=STATS.readings_processed;}
 function startWS(){if(!API||!user)return;const ws=WSK=new WebSocket(API.replace(/^http/,'ws')+'/ws/live?token='+TOKEN);
  ws.onmessage=e=>{if(paused)return;const m=JSON.parse(e.data);if(m.type!='reading')return;const p=P.find(x=>x.pid==m.patient_id);if(!p)return;
@@ -145,7 +151,7 @@ async function login(au,aw){const u=au||$('#u').value.trim(),w=aw||$('#pw').valu
   if(!r.ok){$('#err').textContent='Invalid credentials.';return}
   const d=await r.json();TOKEN=d.access_token;ROLE=d.user.role;USERS[u]={name:d.user.full_name,role:cap(d.user.role)+' access'};user=u;
   await loadLive();shell();startWS()}
- catch(e){$('#err').textContent='Cannot reach the server. Check config.js and that the API is running.'}}
+ catch(e){console.error('LOGIN/RENDER ERROR:',e);const el=$('#err');if(el)el.textContent='Error: '+e.message}}
 for(let i=0;i<60;i++){tick++;P.forEach(step)}tick=0;P.forEach(assess);alerts=[];
 setInterval(()=>{if(paused||API)return;tick++;if(tick==25)P.forEach(p=>{if(p.pend)p.dr=p.pend});P.forEach(p=>{step(p);assess(p)});upd();},1500);
 async function autoLogin(){$('#app').innerHTML='<p id="err" class="mu" style="padding:60px 20px;text-align:center">Loading dashboard…</p>';
